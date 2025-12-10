@@ -1,127 +1,123 @@
+<?php
+session_start();
+include('db.php');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    $sql = "SELECT * FROM admin WHERE a_name = '$username'";
+    $result = $conn->query($sql);
+
+    if (!$result) {
+        die("Query failed: " . $conn->error); // Debugging SQL issues
+    }
+
+    if ($result->num_rows > 0) {
+        $admin = $result->fetch_assoc();
+        // Debugging password check
+        if (password_verify($password, $admin['a_password'])) {
+            $_SESSION['admin_logged_in'] = true;
+            $_SESSION['admin_username'] = $admin['a_username'];
+            header('Location: admin_dashboard.php'); // Redirect to the dashboard
+            exit;
+        } else {
+            $error = "Invalid password!";
+        }
+    } else {
+        $error = "Admin user not found!";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Tripathi Homestay</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<style>
-    /* General body styles */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-/* Form container styles */
-.form-container {
-    background-color: white;
-    width: 100%;
-    max-width: 400px;
-    padding: 20px 30px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-    text-align: center;
-}
-
-/* Heading styles */
-.form-container h2 {
-    margin-bottom: 20px;
-    font-size: 24px;
-    color: #333;
-}
-
-/* Input field styles */
-input[type="text"], input[type="password"] {
-    width: 100%;
-    padding: 12px 15px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 14px;
-    box-sizing: border-box;
-}
-
-/* Button styles */
-button {
-    width: 100%;
-    padding: 12px 15px;
-    background-color: #f79d17;
-    color: white;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #e08b14;
-}
-
-/* Paragraph and link styles */
-p {
-    font-size: 14px;
-    color: #555;
-    margin-top: 15px;
-}
-
-p a {
-    color: #f79d17;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-p a:hover {
-    text-decoration: underline;
-}
-
-    </style>
-<body>
-    <div class="form-container">
-        <h2>Login</h2>
-        <?php
-        require_once 'config.php';
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $username = trim($_POST['username']);
-            $password = trim($_POST['password']);
-
-            $sql = "SELECT * FROM users WHERE username = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("s", $username);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows == 1) {
-                $user = $result->fetch_assoc();
-                if (password_verify($password, $user['password'])) {
-                    session_start();
-                    $_SESSION['username'] = $user['username'];
-                    header("Location: index.php");
-                    exit;
-                } else {
-                    echo "<p class='error'>Invalid password.</p>";
-                }
-            } else {
-                echo "<p class='error'>Invalid username or email.</p>";
-            }
+    <title>Admin Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        ?>
-        <form method="POST" action="login.php">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-            <p>Don't have an account? <a href="register.php">Register</a></p>
-
+        .login-container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .login-container h1 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .login-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 0.75rem;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .login-btn:hover {
+            background-color: #0056b3;
+        }
+        .login-container a {
+            display: block;
+            margin-top: 1rem;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .login-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Admin Login</h1>
+        <form action="login.php" method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-btn">Login</button>
         </form>
+        <a href="#">Forgot Password?</a>
     </div>
 </body>
 </html>
